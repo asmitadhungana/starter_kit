@@ -1,15 +1,15 @@
-const Token = artifacts.require("Token");
+const PolarToken = artifacts.require("PolarToken");
 
-const EthSwap = artifacts.require("EthSwap");
+const EtherSwap = artifacts.require("EtherSwap");
 
 module.exports = async function(deployer) {
-  //deploy Token
-  await deployer.deploy(Token);
-  const token = await Token.deployed();
+  //deploy PolarToken
+  await deployer.deploy(PolarToken);
+  const token = await PolarToken.deployed();
   //deploy EthSwap
-  await deployer.deploy(EthSwap, token.address);
-  const ethSwap = await EthSwap.deployed();
+  await deployer.deploy(EtherSwap, token.address);
+  const etherSwap = await EtherSwap.deployed();
 
   //transfet all tokens to EthSwap (1 million)
-  await token.transfer(ethSwap.address, "1000000000000000000000000");
+  await token.transfer(etherSwap.address, "1000000000000000000000000");
 };
