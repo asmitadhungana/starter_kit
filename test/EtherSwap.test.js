@@ -59,7 +59,7 @@ contract("EtherSwap", ([deployer, investor]) => {
 
       //Check EtherSwap balance after purchase
       let etherSwapBalance;
-      etherSwapBalance = await token.balanceOf(etherSwap, address);
+      etherSwapBalance = await token.balanceOf(etherSwap.address);
       assert.equal(etherSwapBalance.toString(), tokens("999900"));
       etherSwapBalance = await web3.eth.getBalance(etherSwap.address);
       assert.equal(etherSwapBalance.toString(), web3.utils.toWei("1", "Ether"));
@@ -70,6 +70,41 @@ contract("EtherSwap", ([deployer, investor]) => {
       assert.equal(event.token, token.address);
       assert.equal(event.amount.toString(), tokens("100").toString());
       assert.equal(event.rate.toString(), "100");
+    });
+  });
+
+  describe("sellTokens()", async () => {
+    let result;
+
+    before(async () => {
+      //Investor must've approved the tokens before purchase
+      await token.approve(etherSwap.address, tokens("100"), { from: investor });
+      //Investor sells tokens
+      result = await etherSwap.sellTokens(tokens("100"), { from: investor });
+    });
+
+    it("Allows user to immediately sell tokens to etherSwap for a fixed price", async () => {
+      //Check the investor token balance after purchase
+      let investorBalance = await token.balanceOf(investor);
+      assert.equal(investorBalance.toString(), tokens("0"));
+
+      //Check EtherSwap balance after purchase
+      let etherSwapBalance;
+      etherSwapBalance = await token.balanceOf(etherSwap.address);
+      assert.equal(etherSwapBalance.toString(), tokens("1000000"));
+      etherSwapBalance = await web3.eth.getBalance(etherSwap.address);
+      assert.equal(etherSwapBalance.toString(), web3.utils.toWei("0", "Ether"));
+
+      // Check logs to ensure event was emitted with correct data
+      const event = result.logs[0].args;
+      assert.equal(event.account, investor);
+      assert.equal(event.token, token.address);
+      assert.equal(event.amount.toString(), tokens("100").toString());
+      assert.equal(event.rate.toString(), "100");
+
+      //FAILURE: investor can't sell more tokens than they have
+      await etherSwap.sellTokens(tokens("500"), { from: investor }).should.be
+        .rejected;
     });
   });
 });
